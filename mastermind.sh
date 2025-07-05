@@ -26,6 +26,9 @@ else
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
 
+# Add current directory to PATH for simulators
+export PATH="$SCRIPT_DIR:$PATH"
+
 # Check common installation locations if modules not found
 if [[ ! -d "$SCRIPT_DIR/core" ]]; then
     for possible_dir in "/opt/mastermind-vps" "/opt/mastermind" "/root/mastermind" "/home/$USER/mastermind"; do
