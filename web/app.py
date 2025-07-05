@@ -293,7 +293,7 @@ def index():
         # Get proxy service status
         services = service_manager.get_all_services_status()
         
-        return render_template('index.html', 
+        return render_template('dashboard.html', 
                              services=services,
                              stats=system_stats,
                              system_info=system_info,
@@ -301,7 +301,7 @@ def index():
                              mastermind_name="Mastermind",
                              user=session.get('username', 'admin'))
     except Exception as e:
-        return render_template('index.html', 
+        return render_template('dashboard.html', 
                              services={}, 
                              stats={},
                              system_info={},
