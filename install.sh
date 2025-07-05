@@ -143,11 +143,24 @@ install_dependencies() {
             unzip tar gzip \
             lsb-release ca-certificates
             
-        # Install Python packages
-        pip3 install --upgrade pip setuptools wheel
-        pip3 install \
-            requests cryptography dnspython flask \
-            pproxy proxy.py asyncio psutil scapy
+        # Install Python packages with break-system-packages flag for Ubuntu 22.04+
+        pip3 install --break-system-packages --upgrade pip setuptools wheel
+        
+        # Try to install packages individually to handle conflicts better
+        for package in requests cryptography dnspython flask pproxy proxy.py asyncio psutil scapy; do
+            if ! pip3 install --break-system-packages "$package" 2>/dev/null; then
+                warning "Failed to install $package, trying alternative method..."
+                # Try using system package manager for some packages
+                case "$package" in
+                    "requests"|"cryptography"|"dnspython"|"flask"|"psutil")
+                        apt install -y python3-"$package" 2>/dev/null || true
+                        ;;
+                    *)
+                        pip3 install --break-system-packages --force-reinstall "$package" || true
+                        ;;
+                esac
+            fi
+        done
             
     elif [[ "$OS" == "redhat" ]]; then
         yum update -y -q
@@ -162,11 +175,24 @@ install_dependencies() {
             htop iotop \
             unzip tar gzip
             
-        # Install Python packages
-        pip3 install --upgrade pip setuptools wheel
-        pip3 install \
-            requests cryptography dnspython flask \
-            pproxy proxy.py asyncio psutil scapy
+        # Install Python packages with break-system-packages flag
+        pip3 install --break-system-packages --upgrade pip setuptools wheel
+        
+        # Try to install packages individually to handle conflicts better
+        for package in requests cryptography dnspython flask pproxy proxy.py asyncio psutil scapy; do
+            if ! pip3 install --break-system-packages "$package" 2>/dev/null; then
+                warning "Failed to install $package, trying alternative method..."
+                # Try using system package manager for some packages
+                case "$package" in
+                    "requests"|"cryptography"|"dnspython"|"flask"|"psutil")
+                        yum install -y python3-"$package" 2>/dev/null || true
+                        ;;
+                    *)
+                        pip3 install --break-system-packages --force-reinstall "$package" || true
+                        ;;
+                esac
+            fi
+        done
     fi
     
     success "Dependencies installed successfully"
