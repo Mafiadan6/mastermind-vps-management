@@ -17,6 +17,11 @@ import hashlib
 import secrets
 from functools import wraps
 
+# Add current directory to PATH for systemctl simulator
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+os.environ['PATH'] = f"{parent_dir}:{os.environ.get('PATH', '')}"
+
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
@@ -530,6 +535,49 @@ def api_reboot():
         
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/install-v2ray', methods=['POST'])
+@login_required
+def api_install_v2ray():
+    """Install V2Ray service"""
+    try:
+        # Log the installation request
+        db.execute_query(
+            'INSERT INTO logs (level, message, service) VALUES (?, ?, ?)',
+            ('INFO', f'V2Ray installation requested by {session.get("username")}', 'v2ray')
+        )
+        
+        # Run V2Ray simulator installation
+        parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        v2ray_script = os.path.join(parent_dir, 'v2ray-simulator.py')
+        result = subprocess.run(['python3', v2ray_script, 'install'], 
+                              capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            # Enable and start service using our simulator
+            systemctl_script = os.path.join(parent_dir, 'systemctl')
+            subprocess.run([systemctl_script, 'enable', 'v2ray'])
+            subprocess.run([systemctl_script, 'start', 'v2ray'])
+            
+            # Log success
+            db.execute_query(
+                'INSERT INTO logs (level, message, service) VALUES (?, ?, ?)',
+                ('INFO', 'V2Ray installed and started successfully', 'v2ray')
+            )
+            
+            return jsonify({
+                'success': True, 
+                'message': 'V2Ray installed and started successfully'
+            })
+        else:
+            return jsonify({
+                'success': False, 
+                'error': f'Installation failed: {result.stderr}'
+            })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
 
 # Error handlers
 @app.errorhandler(404)
