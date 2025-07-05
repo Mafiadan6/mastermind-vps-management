@@ -369,7 +369,7 @@
 
         // Update system information
         function updateSystemInfo() {
-            fetch('/api/system-info')
+            fetch('/api/system/stats')
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
