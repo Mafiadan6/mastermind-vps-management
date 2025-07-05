@@ -21,6 +21,8 @@ NC='\033[0m'
 
 # Script variables
 GITHUB_REPO="https://github.com/Mafiadan6/mastermind-vps-management.git"
+GITHUB_USER="Mafiadan6"
+REPO_NAME="mastermind-vps-management"
 INSTALL_DIR="/opt/mastermind-vps"
 TMP_DIR="/tmp/mastermind-install"
 SERVICE_NAME="mastermind-vps"
@@ -257,6 +259,45 @@ install_system() {
     # Set proper ownership
     chown -R root:root "$INSTALL_DIR"
     chown -R root:root /etc/mastermind /var/log/mastermind /var/cache/mastermind
+    
+    # Verify critical files are present
+    local missing_files=()
+    
+    # Check core modules
+    for module in utils.sh menu.sh installer.sh; do
+        if [[ ! -f "$INSTALL_DIR/core/$module" ]]; then
+            missing_files+=("core/$module")
+        fi
+    done
+    
+    # Check protocol scripts
+    for protocol in v2ray.sh xray.sh shadowsocks.sh wireguard.sh openvpn.sh ssh-custom.sh; do
+        if [[ ! -f "$INSTALL_DIR/protocols/$protocol" ]]; then
+            missing_files+=("protocols/$protocol")
+        fi
+    done
+    
+    if [[ ${#missing_files[@]} -gt 0 ]]; then
+        warning "Some files are missing from installation:"
+        for file in "${missing_files[@]}"; do
+            echo "  - $file"
+        done
+        log "Attempting to download missing files..."
+        
+        # Try to download missing files individually
+        for file in "${missing_files[@]}"; do
+            local file_url="https://raw.githubusercontent.com/$GITHUB_USER/$REPO_NAME/main/$file"
+            local target_file="$INSTALL_DIR/$file"
+            mkdir -p "$(dirname "$target_file")"
+            
+            if wget -q "$file_url" -O "$target_file"; then
+                chmod +x "$target_file"
+                log "Downloaded: $file"
+            else
+                warning "Failed to download: $file"
+            fi
+        done
+    fi
     
     success "System files installed to $INSTALL_DIR"
 }
