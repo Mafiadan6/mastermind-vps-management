@@ -59,6 +59,15 @@ pip3 install --break-system-packages requests cryptography dnspython flask pprox
 sudo apt install python3-requests python3-cryptography python3-dnspython python3-flask python3-psutil
 ```
 
+### Missing Protocol Scripts
+
+If you see errors like "No such file or directory" when trying to install protocols, run the repair script:
+```bash
+curl -fsSL https://raw.githubusercontent.com/Mafiadan6/mastermind-vps-management/main/repair-installation.sh | sudo bash
+```
+
+This will automatically download and install any missing components.
+
 ### Permission Issues
 
 Make sure to run the installer with root privileges:
