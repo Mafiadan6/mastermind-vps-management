@@ -53,11 +53,85 @@ v2ray_menu() {
 install_v2ray() {
     info_message "Installing V2Ray..."
     
-    # Download and install V2Ray
-    curl -Ls https://install.v2ray.com | bash
+    # Check if already installed
+    if command -v v2ray &> /dev/null; then
+        warning_message "V2Ray is already installed"
+        return 0
+    fi
+    
+    # Install dependencies
+    apt-get update
+    apt-get install -y curl wget unzip
+    
+    # Download and install V2Ray using official script
+    info_message "Downloading V2Ray installation script..."
+    if curl -Ls https://install.v2ray.com | bash; then
+        success_message "V2Ray installation script completed"
+    else
+        error_message "Failed to run V2Ray installation script"
+        
+        # Fallback: Manual installation
+        info_message "Attempting manual installation..."
+        
+        # Download V2Ray manually
+        LATEST_VERSION=$(curl -s https://api.github.com/repos/v2fly/v2ray-core/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+        if [[ -z "$LATEST_VERSION" ]]; then
+            LATEST_VERSION="v5.4.1"  # Fallback version
+        fi
+        
+        DOWNLOAD_URL="https://github.com/v2fly/v2ray-core/releases/download/${LATEST_VERSION}/v2ray-linux-64.zip"
+        
+        cd /tmp
+        if wget -O v2ray.zip "$DOWNLOAD_URL"; then
+            unzip -o v2ray.zip
+            mkdir -p /usr/local/bin/v2ray
+            cp v2ray /usr/local/bin/v2ray/
+            cp v2ctl /usr/local/bin/v2ray/
+            chmod +x /usr/local/bin/v2ray/v2ray
+            chmod +x /usr/local/bin/v2ray/v2ctl
+            
+            # Create symlinks
+            ln -sf /usr/local/bin/v2ray/v2ray /usr/local/bin/v2ray
+            ln -sf /usr/local/bin/v2ray/v2ctl /usr/local/bin/v2ctl
+            
+            success_message "V2Ray manual installation completed"
+        else
+            error_message "Failed to download V2Ray"
+            return 1
+        fi
+    fi
     
     # Create V2Ray configuration directory
     mkdir -p /etc/v2ray/users
+    mkdir -p /var/log/v2ray
+    
+    # Create systemd service file if not exists
+    if [[ ! -f /etc/systemd/system/v2ray.service ]]; then
+        info_message "Creating V2Ray systemd service..."
+        cat > /etc/systemd/system/v2ray.service << 'EOF'
+[Unit]
+Description=V2Ray Service
+Documentation=https://www.v2fly.org/
+After=network.target nss-lookup.target
+
+[Service]
+User=nobody
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ExecStart=/usr/local/bin/v2ray run -config /etc/v2ray/config.json
+Restart=on-failure
+RestartPreventExitStatus=23
+LimitNPROC=10000
+LimitNOFILE=1000000
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        
+        systemctl daemon-reload
+        success_message "V2Ray systemd service created"
+    fi
     
     # Generate initial configuration
     generate_v2ray_config
@@ -70,7 +144,13 @@ install_v2ray() {
     configure_firewall 443 tcp allow
     configure_firewall 80 tcp allow
     
-    success_message "V2Ray installed successfully"
+    # Verify installation
+    if systemctl is-active --quiet v2ray; then
+        success_message "V2Ray installed and started successfully"
+    else
+        warning_message "V2Ray installed but service failed to start"
+        warning_message "Check logs: journalctl -u v2ray -f"
+    fi
 }
 
 # Configure V2Ray ports and domains
