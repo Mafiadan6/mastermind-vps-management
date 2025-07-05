@@ -1,0 +1,16 @@
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "asyncio>=3.4.3",
+    "cryptography>=45.0.5",
+    "dnspython>=2.7.0",
+    "flask>=3.1.1",
+    "pproxy>=2.7.9",
+    "proxy-py>=2.4.10",
+    "psutil>=7.0.0",
+    "requests>=2.32.4",
+    "scapy>=2.6.1",
+]
