@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mastermind - Login</title>
+    <title>Mastermind VPS - Login</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -15,20 +15,20 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            color: #333;
         }
         
         .login-container {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.9);
             padding: 3rem;
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             width: 100%;
             max-width: 400px;
         }
@@ -38,19 +38,21 @@
             margin-bottom: 2rem;
         }
         
+        .logo i {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
         .logo h1 {
-            font-size: 2.5rem;
-            font-weight: bold;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #333;
+            font-size: 1.8rem;
             margin-bottom: 0.5rem;
         }
         
         .logo p {
-            opacity: 0.8;
-            font-size: 1.1rem;
+            color: #666;
+            font-size: 0.9rem;
         }
         
         .form-group {
@@ -60,78 +62,89 @@
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
+            color: #333;
             font-weight: 500;
         }
         
         .form-group input {
             width: 100%;
-            padding: 1rem;
-            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.75rem 1rem;
+            border: 2px solid rgba(102, 126, 234, 0.2);
             border-radius: 10px;
-            background: rgba(255,255,255,0.1);
-            color: #fff;
             font-size: 1rem;
             transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.7);
         }
         
         .form-group input:focus {
             outline: none;
-            border-color: #4ecdc4;
-            box-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
-        .form-group input::placeholder {
-            color: rgba(255,255,255,0.6);
-        }
-        
-        .login-btn {
+        .btn {
             width: 100%;
-            padding: 1rem;
-            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            padding: 0.75rem;
             border: none;
             border-radius: 10px;
-            color: white;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
         }
         
-        .login-btn:hover {
+        .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(78, 205, 196, 0.3);
-        }
-        
-        .default-creds {
-            background: rgba(255,255,255,0.1);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-top: 1rem;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-        
-        .default-creds strong {
-            color: #4ecdc4;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
         
         .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
+            padding: 0.75rem;
             border-radius: 10px;
-            background: rgba(255, 107, 107, 0.2);
-            border: 1px solid rgba(255, 107, 107, 0.3);
-            color: #ff6b6b;
+            margin-bottom: 1rem;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .default-credentials {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .default-credentials h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .default-credentials p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .security-note {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            color: #856404;
+            font-size: 0.85rem;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
         <div class="logo">
-            <i class="fas fa-server" style="font-size: 3rem; color: #4ecdc4; margin-bottom: 1rem;"></i>
-            <h1>Mastermind</h1>
-            <p>VPS Management System</p>
+            <i class="fas fa-server"></i>
+            <h1>MASTERMIND VPS</h1>
+            <p>Advanced VPS Management System</p>
         </div>
         
         {% with messages = get_flashed_messages() %}
@@ -147,25 +160,30 @@
                 <label for="username">
                     <i class="fas fa-user"></i> Username
                 </label>
-                <input type="text" id="username" name="username" placeholder="Enter username" required>
+                <input type="text" id="username" name="username" required>
             </div>
             
             <div class="form-group">
                 <label for="password">
                     <i class="fas fa-lock"></i> Password
                 </label>
-                <input type="password" id="password" name="password" placeholder="Enter password" required>
+                <input type="password" id="password" name="password" required>
             </div>
             
-            <button type="submit" class="login-btn">
-                <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+            <button type="submit" class="btn">
+                <i class="fas fa-sign-in-alt"></i> Login
             </button>
         </form>
         
-        <div class="default-creds">
-            <strong>Default Login:</strong><br>
-            Username: <strong>admin</strong><br>
-            Password: <strong>admin123</strong>
+        <div class="default-credentials">
+            <h4><i class="fas fa-info-circle"></i> Default Credentials</h4>
+            <p><strong>Username:</strong> admin</p>
+            <p><strong>Password:</strong> admin123</p>
+        </div>
+        
+        <div class="security-note">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Security Note:</strong> Change the default credentials after first login for security.
         </div>
     </div>
 </body>
