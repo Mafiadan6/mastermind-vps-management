@@ -17,8 +17,25 @@ CYAN='\033[0;36m'
 WHITE='\033[1;37m'
 NC='\033[0m' # No Color
 
-# Global variables
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Global variables - Handle symlinks properly
+if [[ -L "${BASH_SOURCE[0]}" ]]; then
+    # If running as symlink, get the real path
+    SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+else
+    # If running directly
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
+
+# Check common installation locations if modules not found
+if [[ ! -d "$SCRIPT_DIR/core" ]]; then
+    for possible_dir in "/opt/mastermind-vps" "/opt/mastermind" "/root/mastermind" "/home/$USER/mastermind"; do
+        if [[ -d "$possible_dir/core" ]]; then
+            SCRIPT_DIR="$possible_dir"
+            break
+        fi
+    done
+fi
+
 LOG_DIR="/var/log/mastermind"
 CONFIG_DIR="/etc/mastermind"
 SERVICE_DIR="/etc/systemd/system"
@@ -154,6 +171,194 @@ init_script() {
     
     # Create log entry
     log_message "INFO" "Mastermind VPS Management Script started"
+}
+
+# Built-in fallback menu when core modules are not available
+show_fallback_menu() {
+    while true; do
+        echo
+        echo -e "${WHITE}================================================================${NC}"
+        echo -e "${WHITE}MAIN MENU${NC}"
+        echo -e "${WHITE}================================================================${NC}"
+        echo -e "${CYAN}1.  Quick Install Missing Components${NC}"
+        echo -e "${CYAN}2.  System Information${NC}"
+        echo -e "${CYAN}3.  Check Installation${NC}"
+        echo -e "${CYAN}4.  Reinstall System${NC}"
+        echo -e "${CYAN}5.  Show Debug Information${NC}"
+        echo -e "${CYAN}0.  Exit${NC}"
+        echo -e "${WHITE}================================================================${NC}"
+        echo -n -e "${YELLOW}Please enter your choice [0-5]: ${NC}"
+        read -r choice
+        
+        case $choice in
+            1)
+                echo -e "${BLUE}Installing missing components...${NC}"
+                install_missing_components
+                ;;
+            2)
+                show_system_info
+                ;;
+            3)
+                check_installation_status
+                ;;
+            4)
+                echo -e "${YELLOW}Reinstalling system...${NC}"
+                reinstall_system
+                ;;
+            5)
+                show_debug_info
+                ;;
+            0)
+                echo -e "${GREEN}Goodbye!${NC}"
+                exit 0
+                ;;
+            *)
+                echo -e "${RED}Invalid choice. Please enter a number between 0-5.${NC}"
+                ;;
+        esac
+    done
+}
+
+# Install missing components
+install_missing_components() {
+    echo -e "${BLUE}Checking for missing core modules...${NC}"
+    
+    if [[ ! -d "$SCRIPT_DIR/core" ]]; then
+        echo -e "${YELLOW}Core modules directory not found. Attempting to download...${NC}"
+        
+        # Try to download from GitHub
+        local temp_dir="/tmp/mastermind-repair"
+        rm -rf "$temp_dir"
+        mkdir -p "$temp_dir"
+        
+        if git clone https://github.com/Mafiadan6/mastermind-vps-management.git "$temp_dir" 2>/dev/null; then
+            if [[ -d "$temp_dir/core" ]]; then
+                cp -r "$temp_dir/core" "$SCRIPT_DIR/"
+                cp -r "$temp_dir/proxies" "$SCRIPT_DIR/" 2>/dev/null || true
+                cp -r "$temp_dir/web" "$SCRIPT_DIR/" 2>/dev/null || true
+                chmod +x "$SCRIPT_DIR/core"/*.sh 2>/dev/null || true
+                echo -e "${GREEN}Core modules installed successfully!${NC}"
+                echo -e "${YELLOW}Please restart the script to load the modules.${NC}"
+            else
+                echo -e "${RED}Downloaded files don't contain core modules.${NC}"
+            fi
+        else
+            echo -e "${RED}Failed to download from GitHub. Please check internet connection.${NC}"
+        fi
+        
+        rm -rf "$temp_dir"
+    else
+        echo -e "${GREEN}Core modules directory exists at: $SCRIPT_DIR/core${NC}"
+        echo -e "${BLUE}Checking individual modules...${NC}"
+        
+        for module in utils.sh installer.sh menu.sh; do
+            if [[ -f "$SCRIPT_DIR/core/$module" ]]; then
+                echo -e "${GREEN}✓ $module found${NC}"
+            else
+                echo -e "${RED}✗ $module missing${NC}"
+            fi
+        done
+    fi
+}
+
+# Show system information
+show_system_info() {
+    echo
+    echo -e "${CYAN}=== SYSTEM INFORMATION ===${NC}"
+    echo -e "${WHITE}Script Directory: ${NC}$SCRIPT_DIR"
+    echo -e "${WHITE}Log Directory: ${NC}$LOG_DIR"
+    echo -e "${WHITE}Config Directory: ${NC}$CONFIG_DIR"
+    echo -e "${WHITE}Operating System: ${NC}$OS"
+    echo -e "${WHITE}Current User: ${NC}$(whoami)"
+    echo -e "${WHITE}Script Path: ${NC}${BASH_SOURCE[0]}"
+    
+    if [[ -L "${BASH_SOURCE[0]}" ]]; then
+        echo -e "${WHITE}Real Path: ${NC}$(readlink -f "${BASH_SOURCE[0]}")"
+    fi
+    
+    echo
+    echo -e "${CYAN}=== DIRECTORY CONTENTS ===${NC}"
+    echo -e "${WHITE}Files in $SCRIPT_DIR:${NC}"
+    ls -la "$SCRIPT_DIR" 2>/dev/null || echo "Directory not accessible"
+    
+    if [[ -d "$SCRIPT_DIR/core" ]]; then
+        echo
+        echo -e "${WHITE}Files in $SCRIPT_DIR/core:${NC}"
+        ls -la "$SCRIPT_DIR/core"
+    fi
+}
+
+# Check installation status
+check_installation_status() {
+    echo
+    echo -e "${CYAN}=== INSTALLATION STATUS ===${NC}"
+    
+    # Check directories
+    for dir in "$SCRIPT_DIR" "$LOG_DIR" "$CONFIG_DIR"; do
+        if [[ -d "$dir" ]]; then
+            echo -e "${GREEN}✓ Directory exists: $dir${NC}"
+        else
+            echo -e "${RED}✗ Directory missing: $dir${NC}"
+        fi
+    done
+    
+    # Check core modules
+    echo
+    echo -e "${CYAN}Core Modules:${NC}"
+    for module in utils.sh installer.sh menu.sh; do
+        if [[ -f "$SCRIPT_DIR/core/$module" ]]; then
+            echo -e "${GREEN}✓ $module${NC}"
+        else
+            echo -e "${RED}✗ $module${NC}"
+        fi
+    done
+    
+    # Check symlinks
+    echo
+    echo -e "${CYAN}Global Commands:${NC}"
+    for cmd in mastermind menu; do
+        if [[ -L "/usr/local/bin/$cmd" ]]; then
+            echo -e "${GREEN}✓ /usr/local/bin/$cmd -> $(readlink "/usr/local/bin/$cmd")${NC}"
+        else
+            echo -e "${RED}✗ /usr/local/bin/$cmd missing${NC}"
+        fi
+    done
+}
+
+# Reinstall system
+reinstall_system() {
+    echo -e "${YELLOW}This will download and reinstall the Mastermind VPS Management System.${NC}"
+    echo -n -e "${YELLOW}Are you sure? (y/N): ${NC}"
+    read -r confirm
+    
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo -e "${BLUE}Downloading installer...${NC}"
+        curl -fsSL https://raw.githubusercontent.com/Mafiadan6/mastermind-vps-management/main/install.sh | bash
+    else
+        echo -e "${YELLOW}Reinstallation cancelled.${NC}"
+    fi
+}
+
+# Show debug information
+show_debug_info() {
+    echo
+    echo -e "${CYAN}=== DEBUG INFORMATION ===${NC}"
+    echo -e "${WHITE}Bash Version: ${NC}$BASH_VERSION"
+    echo -e "${WHITE}Script Arguments: ${NC}$*"
+    echo -e "${WHITE}Current Working Directory: ${NC}$(pwd)"
+    echo -e "${WHITE}PATH: ${NC}$PATH"
+    
+    echo
+    echo -e "${CYAN}Environment Variables:${NC}"
+    env | grep -E "(SCRIPT_DIR|LOG_DIR|CONFIG_DIR|OS)" || echo "No relevant environment variables found"
+    
+    echo
+    echo -e "${CYAN}Recent Log Entries:${NC}"
+    if [[ -f "$LOG_DIR/mastermind.log" ]]; then
+        tail -10 "$LOG_DIR/mastermind.log" 2>/dev/null || echo "Cannot read log file"
+    else
+        echo "Log file not found: $LOG_DIR/mastermind.log"
+    fi
 }
 
 # Update system packages
@@ -380,7 +585,12 @@ main() {
     init_proxy_services
     
     # Show main menu
-    show_main_menu
+    if command -v show_main_menu &> /dev/null; then
+        show_main_menu
+    else
+        # Built-in fallback menu if core modules not loaded
+        show_fallback_menu
+    fi
 }
 
 # Execute if script is run directly
