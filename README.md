@@ -431,8 +431,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Debug Information**: Use the built-in debug tools
 - **Web Interface Help**: Built-in help system in the web dashboard
 
+### Direct Support
+- **Telegram**: [@bitcockiii](https://t.me/bitcockiii) - Direct support and questions
+- **Real-time Help**: Fast response for urgent issues and configuration help
+
 ### Professional Support
-For enterprise support and custom implementations, contact the development team.
+For enterprise support and custom implementations, contact the development team via Telegram or GitHub Issues.
 
 ## 🏆 Acknowledgments
 
