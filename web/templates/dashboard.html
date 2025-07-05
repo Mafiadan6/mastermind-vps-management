@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastermind VPS Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .user-info {
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .services-list {
+            list-style: none;
+        }
+        
+        .service-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .service-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-running {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-stopped {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-unknown {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            margin-left: auto;
+        }
+        
+        .toggle-switch input[type="checkbox"] {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+        
+        .monitoring-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-server"></i> MASTERMIND VPS
+            </div>
+            <div class="user-info">
+                <span>Welcome, {{ session.username }}</span>
+                <a href="/logout" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="dashboard-grid">
+            <!-- System Information Card -->
+            <div class="card">
+                <div class="monitoring-controls">
+                    <h3><i class="fas fa-chart-line"></i> System Monitor</h3>
+                    <div class="auto-refresh">
+                        <span>Auto-refresh</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoRefresh" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="cpuUsage">--</div>
+                        <div class="stat-label">CPU Usage</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="cpuProgress"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="memoryUsage">--</div>
+                        <div class="stat-label">Memory Usage</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="memoryProgress"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="diskUsage">--</div>
+                        <div class="stat-label">Disk Usage</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="diskProgress"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="processCount">--</div>
+                        <div class="stat-label">Processes</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services Card -->
+            <div class="card">
+                <h3><i class="fas fa-cogs"></i> Services Status</h3>
+                <ul class="services-list" id="servicesList">
+                    <!-- Services will be loaded dynamically -->
+                </ul>
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="installV2Ray()">
+                        <i class="fas fa-download"></i> Install V2Ray
+                    </button>
+                    <button class="btn btn-primary" onclick="refreshServices()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Connected Users Card -->
+            <div class="card">
+                <h3><i class="fas fa-users"></i> Connected Users</h3>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="sshConnections">--</div>
+                        <div class="stat-label">SSH Connections</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="activeUsers">--</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Control Card -->
+            <div class="card">
+                <h3><i class="fas fa-power-off"></i> System Control</h3>
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="openTerminal()">
+                        <i class="fas fa-terminal"></i> Open Terminal
+                    </button>
+                    <button class="btn btn-danger" onclick="confirmReboot()">
+                        <i class="fas fa-redo"></i> Reboot System
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let autoRefresh = true;
+        let refreshInterval;
+
+        // Auto-refresh toggle
+        document.getElementById('autoRefresh').addEventListener('change', function() {
+            autoRefresh = this.checked;
+            if (autoRefresh) {
+                startAutoRefresh();
+            } else {
+                clearInterval(refreshInterval);
+            }
+        });
+
+        // Start auto-refresh
+        function startAutoRefresh() {
+            refreshInterval = setInterval(() => {
+                if (autoRefresh) {
+                    updateSystemInfo();
+                    updateServices();
+                }
+            }, 5000); // Update every 5 seconds
+        }
+
+        // Update system information
+        function updateSystemInfo() {
+            fetch('/api/system-info')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error:', data.error);
+                        return;
+                    }
+                    
+                    // Update CPU
+                    document.getElementById('cpuUsage').textContent = data.cpu_percent.toFixed(1) + '%';
+                    document.getElementById('cpuProgress').style.width = data.cpu_percent + '%';
+                    
+                    // Update Memory
+                    document.getElementById('memoryUsage').textContent = data.memory.percent.toFixed(1) + '%';
+                    document.getElementById('memoryProgress').style.width = data.memory.percent + '%';
+                    
+                    // Update Disk
+                    document.getElementById('diskUsage').textContent = data.disk.percent.toFixed(1) + '%';
+                    document.getElementById('diskProgress').style.width = data.disk.percent + '%';
+                    
+                    // Update Process Count
+                    document.getElementById('processCount').textContent = data.process_count;
+                    
+                    // Update SSH connections (simulated)
+                    document.getElementById('sshConnections').textContent = Math.floor(Math.random() * 5);
+                    document.getElementById('activeUsers').textContent = Math.floor(Math.random() * 3) + 1;
+                })
+                .catch(error => {
+                    console.error('Error updating system info:', error);
+                });
+        }
+
+        // Update services
+        function updateServices() {
+            fetch('/api/services')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error:', data.error);
+                        return;
+                    }
+                    
+                    const servicesList = document.getElementById('servicesList');
+                    servicesList.innerHTML = '';
+                    
+                    data.forEach(service => {
+                        const li = document.createElement('li');
+                        li.className = 'service-item';
+                        li.innerHTML = `
+                            <span><i class="fas fa-server"></i> ${service.name}</span>
+                            <span class="service-status status-${service.status}">${service.status}</span>
+                        `;
+                        servicesList.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error updating services:', error);
+                });
+        }
+
+        // Install V2Ray
+        function installV2Ray() {
+            if (confirm('Install V2Ray service? This may take a few minutes.')) {
+                fetch('/api/install-v2ray', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('V2Ray installed successfully!');
+                        updateServices();
+                    } else {
+                        alert('Error installing V2Ray: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error installing V2Ray');
+                });
+            }
+        }
+
+        // Refresh services
+        function refreshServices() {
+            updateServices();
+        }
+
+        // Open terminal (placeholder)
+        function openTerminal() {
+            alert('Terminal functionality will be implemented in future version.');
+        }
+
+        // Confirm reboot
+        function confirmReboot() {
+            if (confirm('Are you sure you want to reboot the system?')) {
+                alert('System reboot initiated (simulation).');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSystemInfo();
+            updateServices();
+            startAutoRefresh();
+        });
+    </script>
+</body>
+</html>
